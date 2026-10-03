@@ -19,12 +19,12 @@ export function toMovie(item: OmdbMovieItem): Movie {
     title: item.Title,
     year: item.Year,
     type: item.Type,
-    poster: item.Poster,
+    poster: item.Poster === 'N/A' ? '' : item.Poster,
   };
 }
 
 /**
- * Shuffles an array in place using the Fisher-Yates algorithm.
+ * Returns a shuffled copy of the array using the Fisher-Yates algorithm.
  */
 function shuffle<T>(array: T[]): T[] {
   const result = [...array];
