@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Movie } from '../types/movie';
 
 interface MovieCardProps {
@@ -5,14 +6,15 @@ interface MovieCardProps {
 }
 
 export function MovieCard({ movie }: MovieCardProps) {
+const [imageFailed, setImageFailed] = useState(false);
   return (
     <article className="movie-card">
       <div className="movie-poster-wrapper">
-        {movie.poster ? (
+        {movie.poster && !imageFailed ? (
           <img
             src={movie.poster}
             alt={movie.title}
-            className="movie-poster"
+            className="movie-poster" onError={() => setImageFailed(true)}
           />
         ) : (
           <div className="movie-poster-placeholder">
