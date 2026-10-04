@@ -150,7 +150,38 @@ main.tsx or HomeModel.ts unless Step 3 requires it.
 
 **Prompt:**
 
-**What AI produced:**
+```
+Do Step 4 only: React Router and the Header. Standard CSS, no UI library.
 
-**What I checked/changed:**
+Context update: Step 3 is verified, tested in the browser and committed
+(b9c26a0). I then made a manual edit to MovieCard.tsx (added imageFailed
+state and an onError handler, commit 8239b33). Do not modify main.tsx,
+HomeModel.ts, omdbClient.ts, useHomeViewModel.ts, MovieCard.tsx,
+MovieGrid.tsx or HomeScreen.tsx. Re-read the current files before editing.
+
+- src/components/Header.tsx: links to "/" (Home) and "/favorites"
+  (Favorites), and a search box with a submit button. On submit, navigate
+  to /?q=<term> using useNavigate and encodeURIComponent. Keep the input
+  text in local state. Clicking Home clears the input. No validation, no
+  fetch, no OMDB imports; validation stays in HomeModel for Step 5.
+- src/screens/favorites/FavoritesScreen.tsx: a placeholder that renders a
+  heading "Favorites" and the text "Coming in Step 6".
+- App.tsx: wrap everything in BrowserRouter from react-router-dom. Render
+  Header, then Routes with "/" -> HomeScreen and "/favorites" ->
+  FavoritesScreen. Keep the app-container wrapper and the App.css import.
+- App.css: append header styles only. Do not rewrite or reorder existing
+  rules.
+
+Rules for this session:
+- Propose each file edit and wait for my approval.
+- Do not edit any file after I approve it. If a change is needed, propose
+  it again.
+- Do not run any command I did not ask for.
+
+Stop after Step 4.
+```
+
+**What AI produced:** Header.tsx, FavoritesScreen.tsx, App.tsx (BrowserRouter and two routes), appended header styles in App.css. Commit 8d11678.
+
+**What I checked/changed:** Read all four files from disk. App.css diff showed 84 insertions and 0 deletions. git status confirmed main.tsx, HomeModel.ts and MovieCard.tsx were untouched. Build passed. Router, Favorites placeholder, Home link and URL change (/?q=batman) verified in the browser. Nothing was edited after approval.
 
