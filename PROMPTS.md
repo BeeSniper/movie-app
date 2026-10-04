@@ -228,6 +228,7 @@ Rules for this session:
 Stop after Step 5.
 ```
 
-**What AI produced:**
+**What AI produced:** useHomeViewModel.ts only: useSearchParams, q === null chooses seed or search, cleanup flag, dependency array [q]. Commit 137ce72.
 
-**What I checked/changed:**
+**What I checked/changed:** Read the full diff from disk. Confirmed [q], q === null, the cancelled flag in both then and catch, and no fetch or omdbClient import. git status showed only useHomeViewModel.ts modified. Build passed. Browser results: all 6 tests matched expectations (batman search, "a" and empty submit showed the validation error, zzzzqq showed a not-found error, Home restored the seed grid, Back restored previous results). Nothing was edited after approval.
+
