@@ -185,3 +185,49 @@ Stop after Step 4.
 
 **What I checked/changed:** Read all four files from disk. App.css diff showed 84 insertions and 0 deletions. git status confirmed main.tsx, HomeModel.ts and MovieCard.tsx were untouched. Build passed. Router, Favorites placeholder, Home link and URL change (/?q=batman) verified in the browser. Nothing was edited after approval.
 
+## Prompt 6: Step 5, search by URL
+
+**Prompt:**
+
+```
+Do Step 5 only: search by reading q from the URL. Standard CSS, no UI library.
+
+Context update: Step 4 is verified, tested in the browser and committed
+(8d11678). Earlier manual edits: HomeModel.ts (N/A posters, commit
+52738fa) and MovieCard.tsx (imageFailed state and onError handler, commit
+8239b33). Re-read the current files before editing, including HomeModel.ts
+so you use the real searchByQuery signature.
+
+Change useHomeViewModel.ts only:
+- Read q with useSearchParams from react-router-dom. Use searchParams.get('q').
+- If q is null (no q in the URL), load seed movies with fetchSeedMovies.
+- If q is not null, call searchByQuery(q). That includes an empty q, so
+  an empty submit shows the validation error from HomeModel. Do not
+  duplicate validation in this file.
+- The useEffect dependency array must contain the q string, not the
+  searchParams object.
+- At the start of each load, set isLoading to true and clear errorMessage.
+- Add a cleanup flag in the effect (for example let cancelled = false, set
+  to true in the cleanup) so a slow earlier response cannot overwrite a
+  newer one. Do not set state if cancelled.
+- Keep the same returned values: movies, isLoading, errorMessage. Set
+  isLoading to false on both success and failure. Store err.message on
+  failure.
+- No fetch calls and no OMDB imports in this file. Import from HomeModel
+  only.
+
+Do not modify any other file. If you think HomeModel.ts, HomeScreen.tsx or
+Header.tsx needs a change, tell me and wait. Do not edit it.
+
+Rules for this session:
+- Propose the file edit and wait for my approval.
+- Do not edit any file after I approve it. If a change is needed, propose
+  it again.
+- Do not run any command I did not ask for.
+
+Stop after Step 5.
+```
+
+**What AI produced:**
+
+**What I checked/changed:**
