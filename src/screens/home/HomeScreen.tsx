@@ -1,8 +1,10 @@
 import { useHomeViewModel } from './useHomeViewModel';
 import { MovieGrid } from '../../components/MovieGrid';
+import { useFavorites } from '../../context/FavoritesContext';
 
 export function HomeScreen() {
   const { movies, isLoading, errorMessage } = useHomeViewModel();
+  const { isFavorite, toggle } = useFavorites();
 
   return (
     <main className="home-screen">
@@ -18,7 +20,13 @@ export function HomeScreen() {
         </div>
       )}
 
-      {!isLoading && !errorMessage && <MovieGrid movies={movies} />}
+      {!isLoading && !errorMessage && (
+        <MovieGrid
+          movies={movies}
+          isFavorite={isFavorite}
+          onToggleFavorite={toggle}
+        />
+      )}
     </main>
   );
 }

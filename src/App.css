@@ -204,3 +204,52 @@
 .favorites-screen p {
   color: #a0a0b0;
 }
+
+
+/* Favorite Button */
+.movie-poster-wrapper {
+  position: relative;
+}
+
+.favorite-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(26, 26, 34, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 1.25rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.2s ease;
+}
+
+.favorite-button[aria-pressed="false"] {
+  color: #e0e0e0;
+}
+
+.favorite-button[aria-pressed="true"] {
+  color: #ff3366;
+}
+
+.favorite-button:hover {
+  background: rgba(26, 26, 34, 1);
+  transform: scale(1.1);
+}
+
+.favorite-button:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+/* Favorites Empty State */
+.favorites-empty-message {
+  padding: 32px 0;
+  color: #a0a0b0;
+  font-size: 1.05rem;
+}
