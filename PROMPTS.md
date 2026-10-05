@@ -232,3 +232,111 @@ Stop after Step 5.
 
 **What I checked/changed:** Read the full diff from disk. Confirmed [q], q === null, the cancelled flag in both then and catch, and no fetch or omdbClient import. git status showed only useHomeViewModel.ts modified. Build passed. Browser results: all 6 tests matched expectations (batman search, "a" and empty submit showed the validation error, zzzzqq showed a not-found error, Home restored the seed grid, Back restored previous results). Nothing was edited after approval.
 
+## Prompt 7: Step 6a (favorites model and context)
+```
+Do Step 6a only: the favorites model and shared state. No UI changes yet.
+Standard CSS, no UI library.
+
+Context update: Step 5 is verified, tested in the browser and committed
+(137ce72). Earlier manual edits: HomeModel.ts (N/A posters, commit 52738fa)
+and MovieCard.tsx (imageFailed state and onError handler, commit 8239b33).
+Re-read the current files before editing, including movie.ts so you use the
+real Movie type name and fields.
+
+Create:
+- src/models/FavoritesModel.ts (put it next to HomeModel.ts): pure TypeScript,
+  no React, no hooks. Storage key "movie-app:favorites". Functions:
+  loadFavorites(): Movie[], saveFavorites(movies: Movie[]): void,
+  toggleFavorite(current: Movie[], movie: Movie): Movie[] (adds if the
+  imdbID is absent, removes if present, returns a new array),
+  isFavorite(current: Movie[], imdbID: string): boolean.
+  loadFavorites must never throw: invalid JSON, a non-array value, or
+  localStorage being unavailable returns []. Drop any stored entry that is
+  not an object with a string imdbID. saveFavorites must catch storage
+  errors and not throw. No console logging of stored data.
+- src/context/FavoritesContext.tsx: a FavoritesProvider and a useFavorites
+  hook. State is initialised from loadFavorites once. The hook returns
+  favorites, isFavorite(imdbID) and toggle(movie). Every toggle calls
+  saveFavorites with the new list. useFavorites must throw a clear error if
+  used outside the provider.
+
+Change App.tsx only to wrap the existing BrowserRouter content in
+FavoritesProvider. Do not change routes, Header, or the app-container
+wrapper.
+
+Do not modify any other file. Do not modify main.tsx, HomeModel.ts,
+omdbClient.ts, useHomeViewModel.ts, MovieCard.tsx, MovieGrid.tsx,
+HomeScreen.tsx, Header.tsx, FavoritesScreen.tsx or the CSS. If you think one
+of them needs a change, tell me and wait.
+
+Rules for this session:
+- Propose each file edit and wait for my approval.
+- Do not edit any file after I approve it. If a change is needed, propose
+  it again.
+- Do not run any command I did not ask for.
+
+Stop after Step 6a.
+```
+
+**What AI produced:** FavoritesModel.ts, FavoritesContext.tsx, App.tsx wrapped in FavoritesProvider. Commit 596fb89.
+
+**What I checked/changed:** The AI asked where to put FavoritesModel.ts because my prompt contradicted itself (src/models/ vs next to HomeModel.ts); I chose src/models/. Read all three proposals, approved unchanged. git show -w on App.tsx showed only the import and the two provider tags. Movie type confirmed to have exactly the five fields the model rebuilds. Build passed. Nothing edited after approval.
+
+
+## Prompt 8: Step 6b (favorite button and Favorites screen)
+```
+Do Step 6b only: the favorite button and the Favorites screen.
+Standard CSS, no UI library.
+
+Context update: Step 6a is verified, tested and committed (596fb89). It added
+src/models/FavoritesModel.ts and src/context/FavoritesContext.tsx
+(FavoritesProvider, useFavorites returning favorites, isFavorite(imdbID) and
+toggle(movie)), and wrapped App.tsx in FavoritesProvider. Earlier manual edits:
+HomeModel.ts (N/A posters, commit 52738fa) and MovieCard.tsx (imageFailed
+state and onError handler, commit 8239b33). Re-read the current files before
+editing, including MovieCard.tsx so the imageFailed fallback is kept exactly
+as it is.
+
+Change these files only:
+- src/components/MovieCard.tsx: add two props, isFavorite: boolean and
+  onToggleFavorite: (movie: Movie) => void. Add a button with type="button",
+  aria-pressed={isFavorite} and an aria-label of "Add to favorites" or
+  "Remove from favorites" depending on isFavorite. Show a filled heart when
+  favorited and an outline heart when not (text characters, no icon library).
+  Keep the imageFailed state and onError behaviour unchanged.
+- src/components/MovieGrid.tsx: accept isFavorite: (imdbID: string) => boolean
+  and onToggleFavorite: (movie: Movie) => void, and pass the right values
+  to each card. Keep key={movie.imdbID}.
+- src/screens/home/HomeScreen.tsx: call useFavorites and pass isFavorite and
+  toggle to MovieGrid. Keep all existing loading and error behaviour.
+- src/screens/favorites/FavoritesScreen.tsx: replace the placeholder. Heading
+  "Favorites". Use useFavorites. If favorites is empty, show the text
+  "No favorites yet. Add some from the Home page." Otherwise render MovieGrid
+  with the favorites list. Unfavoriting from this screen removes the card
+  immediately.
+- src/App.css: append styles for the favorite button and the empty state
+  only. Do not rewrite or reorder existing rules. The button must be keyboard
+  focusable with a visible focus style.
+
+No fetch calls and no OMDB imports in any of these files. No localStorage
+access outside FavoritesModel.ts. Do not add validation or storage logic to
+the components.
+
+Do not modify any other file. Do not modify main.tsx, App.tsx, HomeModel.ts,
+FavoritesModel.ts, FavoritesContext.tsx, omdbClient.ts, useHomeViewModel.ts,
+Header.tsx or index.css. If you think one of them needs a change, tell me and
+wait.
+
+Rules for this session:
+- Propose each file edit and wait for my approval.
+- Do not edit any file after I approve it. If a change is needed, propose
+  it again.
+- Do not run any command I did not ask for.
+
+Stop after Step 6b.
+```
+
+
+**What AI produced:** MovieCard.tsx, MovieGrid.tsx, HomeScreen.tsx, FavoritesScreen.tsx, App.css (append). Commit 5e8d250.
+
+**What I checked/changed:** App.css diff was 49 insertions and 0 deletions even though the AI labelled the action Create. The 7 deletions were the lines the new code replaced. Build passed. Six browser tests passed: favorite, persists on reload, appears on Favorites, unfavorite shows the empty message, favorited search result shows the filled heart, corrupt storage gives an empty list and recovers on the next save. Keyboard check passed: Tab reaches each heart, Enter toggles it, focus ring visible. Nothing edited after approval.
