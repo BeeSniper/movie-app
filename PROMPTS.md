@@ -340,3 +340,92 @@ Stop after Step 6b.
 **What AI produced:** MovieCard.tsx, MovieGrid.tsx, HomeScreen.tsx, FavoritesScreen.tsx, App.css (append). Commit 5e8d250.
 
 **What I checked/changed:** App.css diff was 49 insertions and 0 deletions even though the AI labelled the action Create. The 7 deletions were the lines the new code replaced. Build passed. Six browser tests passed: favorite, persists on reload, appears on Favorites, unfavorite shows the empty message, favorited search result shows the filled heart, corrupt storage gives an empty list and recovers on the next save. Keyboard check passed: Tab reaches each heart, Enter toggles it, focus ring visible. Nothing edited after approval.
+## Prompt 9: Step 7a (card polish, CSS only)
+
+```
+Do Step 7a only: CSS polish for the movie cards. CSS only, standard CSS,
+no UI library.
+Context update: Step 6 is verified, tested and committed (6a 596fb89,
+6b 5e8d250, log f597099). Earlier manual edits: HomeModel.ts (N/A posters,
+52738fa) and MovieCard.tsx (imageFailed state and onError handler, 8239b33).
+Re-read src/App.css before editing, so you use the real class names:
+movie-grid, movie-card, movie-poster-wrapper, movie-poster,
+movie-poster-placeholder, movie-details, movie-title, movie-meta,
+favorite-button.
+Change src/App.css only, by APPENDING a new block at the end under the
+comment /* Step 7a: card polish */. Do not edit, delete or reorder any
+existing rule. Where a later rule must override an existing one, use the
+same selector so the later rule wins by order.
+Goals:
+1. Equal-height cards in each grid row. Cards stretch to the row height.
+ Make movie-card a flex column. The details block fills the remaining
+ space, and movie-meta sits at the bottom (margin-top: auto).
+2. Consistent poster size. movie-poster-wrapper gets aspect-ratio: 2 / 3,
+ with the image and the "No poster" placeholder filling it
+ (width and height 100%, object-fit: cover for the image). Cards with a
+ one-line title, a Series badge or a failed poster must look the same
+ height as their neighbours.
+3. Heart contrast on light posters. Make the favorite-button background
+ more opaque (at least 0.9), add a subtle box-shadow, and keep the
+ existing focus-visible outline and the aria-pressed colours unchanged.
+4. Long titles must not break the layout: clamp movie-title to 2 lines
+ with an ellipsis.
+Do not modify any .tsx or .ts file. Do not modify index.css.
+If you think a TSX change is needed, tell me and wait.
+Rules for this session:
+- Propose the edit and wait for my approval.
+- Do not edit any file after I approve it. If a change is needed, propose
+ it again.
+- Do not run any command I did not ask for.
+Stop after Step 7a.
+```
+
+**What AI produced:** App.css append only (46 insertions, 0 deletions): flex column on movie-card, flex 1
+ on movie-details, margin-top auto on movie-meta, 2-line title clamp, favorite-button background 0.92
+ plus box-shadow. Commit 58dfb9c.
+**What I checked/changed:** The AI repeated aspect-ratio 2/3 and width 100% on .movie-poster-wrapper,
+ which already existed at line 56, so goal 2 added nothing even though I told it to re-read App.css.
+ Build passed. Six browser checks passed, including narrowing via zoom (header wraps, no overflow).
+ Nothing edited after approval.
+
+## Prompt 10: Step 7b (save outside the state updater)
+
+```
+Do Step 7b only: a small refactor in FavoritesContext.tsx.
+Context update: Step 7a is verified, tested and committed (58dfb9c).
+Earlier: 6a 596fb89 (FavoritesModel.ts and FavoritesContext.tsx),
+6b 5e8d250. Re-read src/context/FavoritesContext.tsx and
+src/models/FavoritesModel.ts before editing.
+Problem: in FavoritesProvider, toggle calls saveFavorites inside the
+setFavorites updater function. React expects updater functions to be pure,
+and StrictMode runs them twice. Move the side effect out.
+Change src/context/FavoritesContext.tsx only:
+- toggle(movie) computes the new list from the current favorites using
+ toggleFavorite, calls saveFavorites(newList) once, then calls
+ setFavorites(newList). No saveFavorites call inside any updater.
+- Keep the public API exactly as it is: the hook still returns favorites,
+ isFavorite(imdbID) and toggle(movie). Keep the error thrown when
+ useFavorites is used outside the provider.
+- Rapid clicks: two toggles before a re-render must not lose the first one.
+ Keep the latest list in a useRef that is updated whenever the list
+ changes, and have toggle read from that ref instead of the closed-over
+ favorites value. Explain in a short code comment why the ref is used.
+- No new dependencies, no console logging.
+Do not modify any other file. Do not modify FavoritesModel.ts, App.tsx,
+any component, any screen or any CSS. If you think another file needs a
+change, tell me and wait.
+Rules for this session:
+- Propose the edit and wait for my approval.
+- Do not edit any file after I approve it. If a change is needed, propose
+ it again.
+- Do not run any command I did not ask for.
+Stop after Step 7b.
+```
+**What AI produced:** FavoritesContext.tsx only: saveFavorites moved out of the setFavorites updater,
+ toggle computes the new list from a useRef, updates the ref, saves once, then sets state. Commit
+ 4138b06.
+**What I checked/changed:** Checked that toggle updates the ref itself, so two quick clicks cannot lose
+ one. The AI writes favoritesRef.current = favorites during render; it works, but React guidance prefers
+ syncing refs in an effect, so a lint rule could flag it. Build passed. Five browser tests passed:
+ persists on reload, two quick favorites both kept, both on Favorites, unfavorite from Favorites,
+ corrupt storage gives an empty list and heals on the next save. Nothing edited after approval.
