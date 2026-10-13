@@ -429,3 +429,66 @@ Stop after Step 7b.
  syncing refs in an effect, so a lint rule could flag it. Build passed. Five browser tests passed:
  persists on reload, two quick favorites both kept, both on Favorites, unfavorite from Favorites,
  corrupt storage gives an empty list and heals on the next save. Nothing edited after approval.
+## Prompt 11: Step 8a (Firebase init and auth model)
+
+```
+Do Step 8a only: Firebase initialisation and the auth model. No UI changes.
+Standard TypeScript, no UI library.
+
+Context update: Step 7 is verified, tested and committed (7a 58dfb9c,
+7b 4138b06, log 87d8c7d). The firebase npm package is already installed
+(commit a77f8ba). The six Firebase values are already in .env, which is
+git-ignored, and their names are in .env.example (commit 8a5a275). Do not
+install anything and do not read or print .env. Re-read the current files
+before editing, including src/vite-env.d.ts, src/models/FavoritesModel.ts
+and src/services/omdbClient.ts, so you follow the existing style.
+
+Create:
+- src/services/firebase.ts: initialise the Firebase app and export `auth`
+  (getAuth). Read these env variables from import.meta.env:
+  VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN,
+  VITE_FIREBASE_PROJECT_ID, VITE_FIREBASE_STORAGE_BUCKET,
+  VITE_FIREBASE_MESSAGING_SENDER_ID, VITE_FIREBASE_APP_ID. If any is
+  missing or empty, throw an Error that names the missing variable but
+  never includes any value. No hard-coded config values. No console
+  logging. Do not initialise Firestore in this step.
+- src/models/AuthModel.ts: no React, no hooks. Import auth from
+  src/services/firebase.ts only. Export:
+  type AuthUser = { uid: string; email: string | null }
+  type AuthResult = { ok: true; user: AuthUser } | { ok: false; message: string }
+  signUp(email: string, password: string): Promise<AuthResult>
+  logIn(email: string, password: string): Promise<AuthResult>
+  logOut(): Promise<void>
+  subscribeToAuth(callback: (user: AuthUser | null) => void): () => void
+  (wraps onAuthStateChanged and returns the unsubscribe function).
+  Validation lives in this file only: trim the email; reject an empty
+  email or one without "@"; reject a password shorter than 6 characters.
+  Return { ok: false, message } instead of throwing. Catch Firebase
+  errors and map error.code to short readable messages:
+  auth/email-already-in-use, auth/weak-password, auth/invalid-email and
+  auth/network-request-failed each get their own message. For
+  auth/invalid-credential, auth/user-not-found and auth/wrong-password
+  use one shared message ("Incorrect email or password.") so the app does
+  not reveal whether an email is registered. Any other code gets a
+  generic message. Never log or return the password, the raw error object
+  or the config. No console logging.
+
+Change src/vite-env.d.ts only to add the six VITE_FIREBASE_* names to the
+existing ImportMetaEnv interface as readonly string fields. Do not change
+the existing OMDB entries.
+
+Do not modify any other file. Do not modify package.json,
+package-lock.json, .env, .env.example, main.tsx, App.tsx, any component,
+any screen, FavoritesModel.ts, FavoritesContext.tsx, HomeModel.ts,
+omdbClient.ts, useHomeViewModel.ts or any CSS. If you think another file
+needs a change, tell me and wait.
+
+Rules for this session:
+- Propose each file edit and wait for my approval.
+- Do not edit any file after I approve it. If a change is needed, propose
+  it again.
+- Do not run any command I did not ask for.
+Stop after Step 8a.
+```
+**What AI produced:** firebase.ts (reads six VITE_FIREBASE_* values from import.meta.env, throws an error naming only the missing variable, exports auth), AuthModel.ts (signUp, logIn, logOut, subscribeToAuth, validation, error-code mapping with one shared message for invalid-credential, user-not-found and wrong-password) and six readonly string lines in vite-env.d.ts. 3 files, 165 insertions. Commit a0a1f41.
+**What I checked/changed:** The AI searched the web (unrelated repos in its Sources list) and read files outside the re-read list (package.json, both tsconfigs, App.tsx), though the prompt asked for neither. The first attempt hit the Individual quota (about 97 hours), with no file written and the tree clean at a77f8ba, so I re-ran Prompt 11 unchanged. Reviewed all proposals before approving. Read both new files back from disk. Scan for AIza and console. found nothing, and no config value appears in src. Build passed. logOut has no try/catch, which follows the spec, so I noted it as a candidate improvement. No browser test yet because nothing imports firebase.ts until Step 8b. Nothing edited after approval.
