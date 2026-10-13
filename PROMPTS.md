@@ -538,3 +538,65 @@ Stop after Step 8b-i.
 ```
 **What AI produced:** AuthContext.tsx (new, AuthProvider and a useAuth hook that exposes user, isLoading, and the signUp, logIn and logOut functions from AuthModel.ts) and App.tsx with the existing FavoritesProvider block re-indented inside AuthProvider. 2 files, 59 insertions, 9 deletions. Commit 03b0a13.
 **What I checked/changed:** The AI did not search the web and showed no Sources list, and it read no file I had not named, so the added "Do not search the web" line fixed the Prompt 11 miss. Both routes (/ and /favorites) are still in App.tsx. Scan for AIza and console. found nothing. Build passed (modules 35 to 49, bundle 265 kB to 373 kB, expected because Firebase Auth is now imported). Browser test: the movie grid loads, hearts work, and firebase.ts initialised with no missing-variable error. The 9 deleted lines in App.tsx are the old provider block re-indented. Candidate improvements: the context value object is rebuilt on every render, and logOut has no try/catch (follows the Prompt 11 spec).
+
+## Prompt 13: Step 8b-ii (Login screen and header auth)
+
+```
+Do Step 8b-ii only: the login and signup screen, the /login route, the
+Header logged-in state, and the CSS. Standard TypeScript, no UI library.
+
+Context update: Step 8b-i is verified, tested and committed (03b0a13, log
+848a357). It added src/context/AuthContext.tsx (AuthProvider and useAuth,
+which returns user, isLoading, signUp, logIn and logOut) and wrapped the
+app in AuthProvider in src/App.tsx. Do not install anything and do not
+read or print .env. Re-read the current files before editing, including
+src/context/AuthContext.tsx, src/models/AuthModel.ts, src/App.tsx,
+src/App.css, src/components/Header.tsx and
+src/screens/favorites/FavoritesScreen.tsx, so you follow the existing
+style, folder layout and real names.
+
+Create:
+- src/screens/login/LoginScreen.tsx: the login and signup screen, in its
+  own folder like the existing screens. Use useAuth only; do not import
+  firebase, firebase/auth or AuthModel directly. One form with email and
+  password fields and a submit button, plus a control that switches
+  between "Log in" and "Sign up" modes. Use labelled inputs,
+  type="email" and type="password", with noValidate on the form so the
+  validation messages from AuthModel are the ones shown. Do not duplicate
+  validation in the screen. On submit, call logIn or signUp and show the
+  returned message when ok is false. On success, navigate to "/". Disable
+  the submit button while a request is pending. Clear the password field
+  after every submit. Keep the password only in the input's own state;
+  never store it elsewhere. If a user is already logged in, redirect to
+  "/". While isLoading is true, render nothing for the form. No console
+  logging.
+
+Change src/App.tsx only to add a path="/login" route for LoginScreen. Do
+not change the existing routes, providers or the app-container wrapper.
+
+Change src/components/Header.tsx only to add the auth state: while
+isLoading, show nothing auth-related; when logged out, show a "Log in"
+link to /login; when logged in, show the user's email and a "Log out"
+button that calls logOut. Do not change the existing header links or
+layout.
+
+Change src/App.css only by appending new rules for the screen and the
+header auth area. Do not edit or delete any existing rule.
+
+Do not modify any other file. Do not modify AuthModel.ts,
+AuthContext.tsx, firebase.ts, vite-env.d.ts, FavoritesModel.ts,
+FavoritesContext.tsx, main.tsx, index.css, HomeScreen.tsx,
+FavoritesScreen.tsx, HomeModel.ts, omdbClient.ts, useHomeViewModel.ts,
+package.json, .env or .env.example. If you think another file needs a
+change, tell me and wait.
+
+Rules for this session:
+- Propose each file edit and wait for my approval.
+- Do not edit any file after I approve it. If a change is needed, propose
+  it again.
+- Do not run any command I did not ask for.
+- Do not search the web.
+Stop after Step 8b-ii.
+```
+**What AI produced:** LoginScreen.tsx (new, in src/screens/login/), a /login route in App.tsx, the auth state in Header.tsx (a Log in link when logged out, or the user's email and a Log out button when logged in, nothing while isLoading) and appended rules in App.css. 4 files, 285 insertions, 0 deletions. Commit 96112ec.
+**What I checked/changed:** The AI proposed all four files and stopped. It ran no web search, showed no Sources list and read no file I had not named. Reviewed all proposals before approving and accepted them unchanged. Its last action was labelled "Create" on App.css, but git diff --numstat showed 145 additions and 0 deletions, so it was a pure append and the label was only misleading wording. Scan for AIza and console. found nothing, LoginScreen.tsx has no firebase or AuthModel import, and App.css has no variables for the new hardcoded colours to clash with. Read the new files back from disk. Build passed (50 modules, JS bundle 373 kB to 375 kB). All seven browser tests passed: sign-up (the user appeared in Firebase Authentication), log out then log in, wrong password gives the shared message, bad email and short password show validation with no network request, the session survives a refresh, /login redirects when logged in, and the narrow window is fine with the email truncated and the nav intact. Back after login went to the earlier screen. Nothing edited after approval. Candidate improvements: void logOut() has no handling for a rejected promise, both handleSubmit and the effect navigate to "/" on success, and the new CSS colours are hardcoded. The test user stays in Firebase for Prompt 14.
