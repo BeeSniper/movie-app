@@ -492,3 +492,49 @@ Stop after Step 8a.
 ```
 **What AI produced:** firebase.ts (reads six VITE_FIREBASE_* values from import.meta.env, throws an error naming only the missing variable, exports auth), AuthModel.ts (signUp, logIn, logOut, subscribeToAuth, validation, error-code mapping with one shared message for invalid-credential, user-not-found and wrong-password) and six readonly string lines in vite-env.d.ts. 3 files, 165 insertions. Commit a0a1f41.
 **What I checked/changed:** The AI searched the web (unrelated repos in its Sources list) and read files outside the re-read list (package.json, both tsconfigs, App.tsx), though the prompt asked for neither. The first attempt hit the Individual quota (about 97 hours), with no file written and the tree clean at a77f8ba, so I re-ran Prompt 11 unchanged. Reviewed all proposals before approving. Read both new files back from disk. Scan for AIza and console. found nothing, and no config value appears in src. Build passed. logOut has no try/catch, which follows the spec, so I noted it as a candidate improvement. No browser test yet because nothing imports firebase.ts until Step 8b. Nothing edited after approval.
+
+## Prompt 12: Step 8b-i (Auth context)
+
+```
+Do Step 8b-i only: the auth context and its provider. No UI screens, no
+Header change, no CSS. Standard TypeScript, no UI library.
+
+Context update: Step 8a is verified, tested and committed (a0a1f41, log
+f6fb308). It added src/services/firebase.ts, src/models/AuthModel.ts
+(AuthUser, AuthResult, signUp, logIn, logOut, subscribeToAuth) and the six
+VITE_FIREBASE_* types in src/vite-env.d.ts. Do not install anything and do
+not read or print .env. Re-read the current files before editing, including
+src/models/AuthModel.ts, src/context/FavoritesContext.tsx and src/App.tsx,
+so you follow the existing style and the real names.
+
+Create:
+- src/context/AuthContext.tsx: an AuthProvider and a useAuth hook. Import
+  from src/models/AuthModel.ts only; do not import firebase or
+  firebase/auth directly. State: user (AuthUser | null) and isLoading
+  (boolean, true until the first subscribeToAuth callback fires). Subscribe
+  once in a useEffect with an empty dependency array and return the
+  unsubscribe function from the effect. The hook returns user, isLoading,
+  signUp, logIn and logOut, which are the AuthModel functions passed
+  through unchanged. useAuth must throw a clear error if used outside the
+  provider. No console logging. Do not store the password anywhere.
+
+Change src/App.tsx only to wrap the existing content in AuthProvider,
+inside BrowserRouter and outside FavoritesProvider. Do not change routes,
+Header, or the app-container wrapper.
+
+Do not modify any other file. Do not modify AuthModel.ts, firebase.ts,
+vite-env.d.ts, FavoritesModel.ts, FavoritesContext.tsx, main.tsx, any
+component, any screen, HomeModel.ts, omdbClient.ts, useHomeViewModel.ts,
+package.json, .env, .env.example or any CSS. If you think another file
+needs a change, tell me and wait.
+
+Rules for this session:
+- Propose each file edit and wait for my approval.
+- Do not edit any file after I approve it. If a change is needed, propose
+  it again.
+- Do not run any command I did not ask for.
+- Do not search the web.
+Stop after Step 8b-i.
+```
+**What AI produced:** AuthContext.tsx (new, AuthProvider and a useAuth hook that exposes user, isLoading, and the signUp, logIn and logOut functions from AuthModel.ts) and App.tsx with the existing FavoritesProvider block re-indented inside AuthProvider. 2 files, 59 insertions, 9 deletions. Commit 03b0a13.
+**What I checked/changed:** The AI did not search the web and showed no Sources list, and it read no file I had not named, so the added "Do not search the web" line fixed the Prompt 11 miss. Both routes (/ and /favorites) are still in App.tsx. Scan for AIza and console. found nothing. Build passed (modules 35 to 49, bundle 265 kB to 373 kB, expected because Firebase Auth is now imported). Browser test: the movie grid loads, hearts work, and firebase.ts initialised with no missing-variable error. The 9 deleted lines in App.tsx are the old provider block re-indented. Candidate improvements: the context value object is rebuilt on every render, and logOut has no try/catch (follows the Prompt 11 spec).
