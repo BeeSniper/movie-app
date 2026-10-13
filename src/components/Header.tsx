@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export function Header() {
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
+  const { user, isLoading, logOut } = useAuth();
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -37,6 +39,27 @@ export function Header() {
           Search
         </button>
       </form>
+
+      {!isLoading && (
+        <div className="header-auth">
+          {user ? (
+            <>
+              <span className="user-email">{user.email}</span>
+              <button
+                type="button"
+                className="logout-button"
+                onClick={() => void logOut()}
+              >
+                Log out
+              </button>
+            </>
+          ) : (
+            <Link to="/login" className="nav-link">
+              Log in
+            </Link>
+          )}
+        </div>
+      )}
     </header>
   );
 }

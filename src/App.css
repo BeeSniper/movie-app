@@ -299,3 +299,148 @@
   background: rgba(20, 20, 26, 0.92);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
 }
+
+
+/* Login Screen */
+.login-screen {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px 16px;
+}
+
+.login-card {
+  background-color: #1a1a22;
+  border: 1px solid #282836;
+  border-radius: 8px;
+  padding: 32px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.login-card h2 {
+  font-size: 1.5rem;
+  color: #ffffff;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  color: #c0c0d8;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.form-group input {
+  background-color: #121218;
+  border: 1px solid #333344;
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.form-group input:focus {
+  border-color: #6366f1;
+}
+
+.auth-submit-button {
+  background-color: #4f46e5;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.auth-submit-button:hover:not(:disabled) {
+  background-color: #4338ca;
+}
+
+.auth-submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-switch-container {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.auth-switch-button {
+  background: none;
+  border: none;
+  color: #a0a0b0;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.auth-switch-button:hover {
+  color: #ffffff;
+}
+
+.auth-error-message {
+  background-color: #2c1515;
+  color: #ff6b6b;
+  border: 1px solid #ff4d4d;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* Header Auth Area */
+.header-auth {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-email {
+  color: #a0a0b0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logout-button {
+  background-color: #282836;
+  color: #c0c0d8;
+  border: 1px solid #3a3a4e;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.logout-button:hover {
+  background-color: #333344;
+  color: #ffffff;
+}
