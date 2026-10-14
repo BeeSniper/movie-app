@@ -662,3 +662,66 @@ Stop after Step 9b-i.
 ```
 **What AI produced:** firebase.ts (a getFirestore import and an exported db, 2 additions) and UserDataModel.ts (new; LoadResult and SaveResult types, loadFavorites and saveFavorites on the favorites field of users/{uid}, written with merge, every movie field coerced to a string so no undefined is written, error codes mapped to short messages). 2 files, 107 insertions, 0 deletions. Commit 6e50532.
 **What I checked/changed:** The AI explained in its proposal how it handled undefined, as the prompt required. This time its output ended with a Sources list of seven github.com entries from unrelated repos, so "Do not search the web" held for Prompts 12 and 13 and missed on Prompt 14. Its closing summary said no web searches were performed, which the Sources list contradicts. It read only the four files I had named (firebase.ts, AuthModel.ts, FavoritesModel.ts, movie.ts). I read both proposals before approving, but I approved with the single word "approve" instead of the full wording, so the approval did not restrict further edits or commands. The result still matched the proposals: git status showed only the two expected files and firebase.ts changed by 2 additions and 0 deletions. Scan for AIza and console. found nothing, UserDataModel.ts has no React import and uses merge, and Movie has exactly the five fields the model writes. Build passed (56 modules, JS bundle 375 kB to 744 kB because Firestore is now included, with a new warning about chunks over 500 kB). The app still loads, hearts work, login works, the Network tab shows no Firestore request because nothing calls the model yet, and the console has no errors. Candidate improvements: saveFavorites writes an empty-ID entry for malformed input that loadFavorites then drops, and code-splitting for the larger bundle.
+
+## Prompt 15: Step 9b-ii (Favorites context synced to Firestore)
+
+```
+Do not search the web or cite any sources.
+
+Do Step 9b-ii only: connect the favorites context to the user data
+model. No UI changes. Standard TypeScript, no UI library.
+
+Context update: Step 9b-i is verified, tested and committed (6e50532).
+It added db in src/services/firebase.ts and src/models/UserDataModel.ts
+(loadFavorites and saveFavorites, which return { ok } results and never
+throw). Step 9a rules are published: only the signed-in owner can read
+or write users/{uid}. AuthProvider already wraps FavoritesProvider, so
+useAuth is available inside the favorites context. Do not install
+anything and do not read or print .env. Re-read the current files
+before editing, including src/context/FavoritesContext.tsx,
+src/models/FavoritesModel.ts, src/models/UserDataModel.ts and
+src/context/AuthContext.tsx, so you follow the existing style and the
+real names.
+
+Change src/context/FavoritesContext.tsx only. Keep the existing public
+value (favorites, toggle and anything else it exposes) and keep the
+useRef approach, so two quick clicks cannot lose a favorite. Add:
+- Read user and isLoading from useAuth. While isLoading is true, do not
+  load or save anything.
+- Logged out: behave exactly as today, using the localStorage functions
+  from FavoritesModel.ts. When a user logs out, replace the in-memory
+  list with the localStorage list. The signed-in user's favorites must
+  not remain in memory or be written to localStorage.
+- Logged in: load the user's list with loadFavorites(user.uid) and
+  replace both the state and the ref with it. Do not merge it with the
+  localStorage list, and do not write anything to localStorage while
+  logged in.
+- Save only after a successful load for that user. If the load returns
+  { ok: false }, keep the list empty and do not save for that user, so a
+  failed load can never overwrite stored data. A toggle before the load
+  finishes must not trigger a save.
+- On toggle while logged in: compute the new list from the ref, update
+  the ref, call saveFavorites(user.uid, newList) once, then set state.
+  Do not roll back state if a save fails; ignore the result for now.
+- Ignore a load result that arrives after the user changed or logged
+  out (use a cancelled flag in the effect cleanup).
+- No console logging. Never store the uid anywhere except as the
+  argument to the model functions.
+
+Do not modify any other file. Do not modify UserDataModel.ts,
+FavoritesModel.ts, firebase.ts, AuthModel.ts, AuthContext.tsx,
+App.tsx, Header.tsx, LoginScreen.tsx, FavoritesScreen.tsx,
+HomeScreen.tsx, main.tsx, vite-env.d.ts, package.json, .env,
+.env.example or any CSS. If you think another file needs a change,
+tell me and wait.
+
+Rules for this session:
+- Propose the file edit and wait for my approval.
+- Do not edit any file after I approve it. If a change is needed,
+  propose it again.
+- Do not run any command I did not ask for.
+- Do not search the web or cite any sources.
+Stop after Step 9b-ii.
+```
+**What AI produced:** FavoritesContext.tsx only. It reads user and isLoading from useAuth, does nothing while isLoading is true, keeps the localStorage behaviour when logged out (and reloads the localStorage list on logout), loads the user's list with loadFavorites(user.uid) when logged in, ignores late results with a cancelled flag, saves with saveFavorites only after a successful load, never writes localStorage while logged in, and keeps the useRef toggle. The public value (favorites, isFavorite, toggle) is unchanged. 1 file, 75 insertions, 5 deletions. Commit c80b470.
+**What I checked/changed:** The prompt now opens with "Do not search the web or cite any sources", and no Sources list appeared this time, so the first-line wording held on its first try (one prompt is too little to call it fixed). agy read only files named in the prompt. I read the proposal before approving and approved with the full wording (exactly as shown, no other changes, no commands), and the result matched the proposal. Read the new file back from disk. Scan for AIza and console. found nothing, the file has no localStorage call of its own (storage goes through the model), and uid appears only in the load and save calls. Build passed (57 modules, JS bundle 744 kB to 809 kB, with the same chunk-size warning). All ten browser tests passed: logged-out favorites persist; a login starts with an empty list; two favorites appear in users/{uid} in Firestore and survive a reload; logging out shows the logged-out list, not the account's; a second account starts empty and gets its own document; logging back in as user 1 shows only user 1's favorites; two quick clicks are both kept in the app and in Firebase; an unfavorite from the Favorites page survives a reload; and the localStorage favorites key does not change while logged in. Tests 5, 7 and 10 are the isolation proofs, and test 6 also confirms the Step 9a rules work for a second account. Nothing edited after approval. Candidate improvements: a toggle made before the load finishes is lost when the load lands; a failed load is silent, so later toggles never save; a failed save is silent and state is not rolled back; there is a one-render gap at login and logout before the effect runs; the effect depends on the user object, not user.uid; synchronous setState inside the effect may trip newer lint rules; merging local favorites on first login is deferred; and code-splitting for the large bundle.
