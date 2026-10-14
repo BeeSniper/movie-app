@@ -600,3 +600,65 @@ Stop after Step 8b-ii.
 ```
 **What AI produced:** LoginScreen.tsx (new, in src/screens/login/), a /login route in App.tsx, the auth state in Header.tsx (a Log in link when logged out, or the user's email and a Log out button when logged in, nothing while isLoading) and appended rules in App.css. 4 files, 285 insertions, 0 deletions. Commit 96112ec.
 **What I checked/changed:** The AI proposed all four files and stopped. It ran no web search, showed no Sources list and read no file I had not named. Reviewed all proposals before approving and accepted them unchanged. Its last action was labelled "Create" on App.css, but git diff --numstat showed 145 additions and 0 deletions, so it was a pure append and the label was only misleading wording. Scan for AIza and console. found nothing, LoginScreen.tsx has no firebase or AuthModel import, and App.css has no variables for the new hardcoded colours to clash with. Read the new files back from disk. Build passed (50 modules, JS bundle 373 kB to 375 kB). All seven browser tests passed: sign-up (the user appeared in Firebase Authentication), log out then log in, wrong password gives the shared message, bad email and short password show validation with no network request, the session survives a refresh, /login redirects when logged in, and the narrow window is fine with the email truncated and the nav intact. Back after login went to the earlier screen. Nothing edited after approval. Candidate improvements: void logOut() has no handling for a rejected promise, both handleSubmit and the effect navigate to "/" on success, and the new CSS colours are hardcoded. The test user stays in Firebase for Prompt 14.
+
+## Prompt 14: Step 9b-i (Firestore init and user data model)
+
+```
+Do Step 9b-i only: initialise Firestore and add a user-data model. No UI
+changes, no context changes. Standard TypeScript, no UI library.
+
+Context update: Step 9a is done. The published Firestore rules allow read
+and write on users/{uid} only when request.auth.uid == uid, and deny
+everything else. Step 8b-ii is verified, tested and committed (96112ec,
+log 61897f0). Do not install anything (the firebase package already
+includes Firestore) and do not read or print .env. Re-read the current
+files before editing, including src/services/firebase.ts,
+src/models/AuthModel.ts, src/models/FavoritesModel.ts and
+src/types/movie.ts, so you follow the existing style, the real names and
+the existing favorite type.
+
+Change src/services/firebase.ts only to initialise Firestore from the
+existing app and export it as `db` (getFirestore). Keep the existing
+environment checks and the `auth` export exactly as they are. No
+hard-coded config values. No console logging.
+
+Create:
+- src/models/UserDataModel.ts: no React, no hooks. Import db from
+  src/services/firebase.ts and the Firestore functions from
+  firebase/firestore. Use the existing favorite type from
+  FavoritesModel.ts or src/types/movie.ts; do not invent a new one.
+  Export:
+  type LoadResult = { ok: true; favorites: <favorite type>[] } | { ok: false; message: string }
+  type SaveResult = { ok: true } | { ok: false; message: string }
+  loadFavorites(uid: string): Promise<LoadResult>
+  saveFavorites(uid: string, favorites: <favorite type>[]): Promise<SaveResult>
+  Data location: the `favorites` field of the document users/{uid}. Do
+  not use a subcollection. loadFavorites returns an empty list when the
+  document or the field does not exist, and also when the field is not an
+  array. saveFavorites writes only the `favorites` field and must not
+  overwrite other fields in the document (use merge). Reject an empty or
+  non-string uid by returning { ok: false, message }. Firestore rejects
+  undefined values, so make sure saveFavorites never writes one, and tell
+  me in your proposal how you handled it. Return { ok: false, message }
+  instead of throwing. Catch Firestore errors and map error.code to short
+  readable messages: permission-denied and unavailable each get their
+  own message; any other code gets a generic message. Never log or return
+  the raw error object, the uid or the config. No console logging.
+
+Do not modify any other file. Do not modify AuthModel.ts,
+AuthContext.tsx, FavoritesModel.ts, FavoritesContext.tsx, App.tsx,
+Header.tsx, LoginScreen.tsx, main.tsx, vite-env.d.ts, any other screen,
+HomeModel.ts, omdbClient.ts, useHomeViewModel.ts, package.json, .env,
+.env.example or any CSS. If you think another file needs a change, tell
+me and wait.
+
+Rules for this session:
+- Propose each file edit and wait for my approval.
+- Do not edit any file after I approve it. If a change is needed, propose
+  it again.
+- Do not run any command I did not ask for.
+- Do not search the web.
+Stop after Step 9b-i.
+```
+**What AI produced:** firebase.ts (a getFirestore import and an exported db, 2 additions) and UserDataModel.ts (new; LoadResult and SaveResult types, loadFavorites and saveFavorites on the favorites field of users/{uid}, written with merge, every movie field coerced to a string so no undefined is written, error codes mapped to short messages). 2 files, 107 insertions, 0 deletions. Commit 6e50532.
+**What I checked/changed:** The AI explained in its proposal how it handled undefined, as the prompt required. This time its output ended with a Sources list of seven github.com entries from unrelated repos, so "Do not search the web" held for Prompts 12 and 13 and missed on Prompt 14. Its closing summary said no web searches were performed, which the Sources list contradicts. It read only the four files I had named (firebase.ts, AuthModel.ts, FavoritesModel.ts, movie.ts). I read both proposals before approving, but I approved with the single word "approve" instead of the full wording, so the approval did not restrict further edits or commands. The result still matched the proposals: git status showed only the two expected files and firebase.ts changed by 2 additions and 0 deletions. Scan for AIza and console. found nothing, UserDataModel.ts has no React import and uses merge, and Movie has exactly the five fields the model writes. Build passed (56 modules, JS bundle 375 kB to 744 kB because Firestore is now included, with a new warning about chunks over 500 kB). The app still loads, hearts work, login works, the Network tab shows no Firestore request because nothing calls the model yet, and the console has no errors. Candidate improvements: saveFavorites writes an empty-ID entry for malformed input that loadFavorites then drops, and code-splitting for the larger bundle.
