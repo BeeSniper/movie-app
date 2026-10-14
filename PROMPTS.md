@@ -725,3 +725,79 @@ Stop after Step 9b-ii.
 ```
 **What AI produced:** FavoritesContext.tsx only. It reads user and isLoading from useAuth, does nothing while isLoading is true, keeps the localStorage behaviour when logged out (and reloads the localStorage list on logout), loads the user's list with loadFavorites(user.uid) when logged in, ignores late results with a cancelled flag, saves with saveFavorites only after a successful load, never writes localStorage while logged in, and keeps the useRef toggle. The public value (favorites, isFavorite, toggle) is unchanged. 1 file, 75 insertions, 5 deletions. Commit c80b470.
 **What I checked/changed:** The prompt now opens with "Do not search the web or cite any sources", and no Sources list appeared this time, so the first-line wording held on its first try (one prompt is too little to call it fixed). agy read only files named in the prompt. I read the proposal before approving and approved with the full wording (exactly as shown, no other changes, no commands), and the result matched the proposal. Read the new file back from disk. Scan for AIza and console. found nothing, the file has no localStorage call of its own (storage goes through the model), and uid appears only in the load and save calls. Build passed (57 modules, JS bundle 744 kB to 809 kB, with the same chunk-size warning). All ten browser tests passed: logged-out favorites persist; a login starts with an empty list; two favorites appear in users/{uid} in Firestore and survive a reload; logging out shows the logged-out list, not the account's; a second account starts empty and gets its own document; logging back in as user 1 shows only user 1's favorites; two quick clicks are both kept in the app and in Firebase; an unfavorite from the Favorites page survives a reload; and the localStorage favorites key does not change while logged in. Tests 5, 7 and 10 are the isolation proofs, and test 6 also confirms the Step 9a rules work for a second account. Nothing edited after approval. Candidate improvements: a toggle made before the load finishes is lost when the load lands; a failed load is silent, so later toggles never save; a failed save is silent and state is not rolled back; there is a one-render gap at login and logout before the effect runs; the effect depends on the user object, not user.uid; synchronous setState inside the effect may trip newer lint rules; merging local favorites on first login is deferred; and code-splitting for the large bundle.
+
+## Prompt 16: Step 10 (Sync errors, early-toggle guard and logout handling)
+
+```
+Do not search the web or cite any sources.
+
+Do Step 10 only: make favorites sync failures visible, stop early
+toggles from being lost, and handle a failed logout. Standard
+TypeScript, no UI library.
+
+Context update: Step 9b-ii is verified, tested and committed (c80b470,
+log bd52ebf). FavoritesContext.tsx loads and saves the signed-in user's
+favorites through UserDataModel.ts, which returns { ok } results and
+never throws. Today a failed load or save is silent, a toggle made
+before the load finishes is lost when the load lands, and Header.tsx
+calls logOut with void and no handling. Do not install anything and do
+not read or print .env. Re-read the current files before editing,
+including src/context/FavoritesContext.tsx, src/components/Header.tsx,
+src/models/UserDataModel.ts, src/models/AuthModel.ts and
+src/context/AuthContext.tsx, so you follow the existing style and the
+real names.
+
+Change src/context/FavoritesContext.tsx only to add:
+- A syncError state (string | null), added to the context value next to
+  favorites, isFavorite and toggle. Keep the existing three unchanged.
+- Logged in, load not yet successful: toggle changes nothing and saves
+  nothing. A toggle before the load finishes is ignored, not queued.
+- Failed load: set syncError to "Could not load your favorites. " plus
+  the message from the result, keep the list empty, and keep ignoring
+  toggles for that user. Clear syncError when a load starts.
+- Failed save: set syncError to "Could not save your last change. " plus
+  the message from the result. Do not roll back the list. A later
+  successful save clears syncError.
+- Ignore a save result that arrives after the user changed or logged
+  out. Use a plain number in a ref that the effect increments each time
+  it runs; the toggle captures it and compares when the result lands.
+  Do not store the uid in any ref or state.
+- Clear syncError when the user logs out or changes, and keep it null
+  when logged out.
+- Keep the useRef list, the cancelled flag, the no-save-before-load rule
+  and the rule that nothing is written to localStorage while logged in.
+  Logged-out behaviour stays exactly as it is. No console logging.
+
+Change src/components/Header.tsx only to add:
+- Read syncError from useFavorites.
+- Replace the void logOut() call with a handler that clears a local
+  logoutError, awaits logOut in a try/catch, and on failure sets
+  logoutError to "Could not log out. Please try again." Never log or
+  show the raw error.
+- Render one message element with role="alert" and
+  className="sync-error", placed after the existing header element (use
+  a fragment), showing syncError or logoutError when either is set and
+  nothing otherwise. Do not change the existing header markup, links,
+  search form or auth area.
+
+Change src/App.css only by appending a .sync-error rule (a short
+message bar that matches the existing error-message look). Do not edit
+or delete any existing rule.
+
+Do not modify any other file. Do not modify UserDataModel.ts,
+FavoritesModel.ts, firebase.ts, AuthModel.ts, AuthContext.tsx, App.tsx,
+LoginScreen.tsx, FavoritesScreen.tsx, HomeScreen.tsx, MovieCard.tsx,
+MovieGrid.tsx, main.tsx, vite-env.d.ts, index.css, package.json, .env
+or .env.example. If you think another file needs a change, tell me and
+wait.
+
+Rules for this session:
+- Propose each file edit and wait for my approval.
+- Do not edit any file after I approve it. If a change is needed,
+  propose it again.
+- Do not run any command I did not ask for.
+- Do not search the web or cite any sources.
+Stop after Step 10.
+```
+**What AI produced:** FavoritesContext.tsx (a syncError value, toggles ignored while logged in until a load has succeeded, failed load and failed save messages, no rollback on a failed save, and a run-number ref so a late save result from a previous user or session is ignored), Header.tsx (reads syncError, a handleLogOut with try/catch replacing void logOut(), and a role="alert" message bar after the header inside a fragment) and App.css (a .sync-error rule appended). 3 files, 108 insertions, 47 deletions. Commit 300e982.
+**What I checked/changed:** No Sources list appeared and agy read no file I had not named, so the first-line "Do not search the web or cite any sources" held for a second prompt in a row. I read the proposal before approving and approved with the full wording (exactly as shown, no other changes, no commands), and the result matched. Its closing summary labelled the App.css action "Create" again, but git diff --numstat showed 14 additions and 0 deletions, so it was a pure append. Header.tsx shows 61 additions and 40 deletions only because wrapping the header in a fragment re-indents it; its links, search form and auth area are unchanged. Read the new files back from disk, including the end of the FavoritesContext.tsx diff: the early-toggle return comes before anything is computed or saved, a failed save only sets the error, and the save result is compared with the run number. Scan for AIza and console. found nothing, the context has no localStorage call, and uid appears only in the load and save calls. Build passed (57 modules, JS bundle 808.72 kB to 809.26 kB, CSS 5.75 kB to 5.93 kB, same chunk-size warning). All eight browser tests passed: a saved favorite appears in Firestore with no error bar; a click right after login does nothing; a reload keeps the favorites; an offline reload shows "Could not load your favorites." with an empty list and inert hearts; going back online clears the error and restores the favorites; switching to a second user carries no error over; logged-out favorites work as before; and Log out works normally. The failed-save and failed-logout messages are untested, because they cannot be triggered safely on a live project. Nothing edited after approval. Candidate improvements: out-of-order saves can show a stale error or clear a real one, hearts give no feedback while the load runs, and the effect still depends on the user object, not user.uid.
