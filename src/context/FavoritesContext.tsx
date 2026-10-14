@@ -23,6 +23,7 @@ interface FavoritesContextValue {
   favorites: Movie[];
   isFavorite: (imdbID: string) => boolean;
   toggle: (movie: Movie) => void;
+  syncError: string | null;
 }
 
 const FavoritesContext = createContext<FavoritesContextValue | null>(null);
@@ -33,6 +34,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   const [favorites, setFavorites] = useState<Movie[]>(() =>
     !isLoading && !user ? loadLocalFavorites() : []
   );
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   // Keep a ref synchronized with the latest favorites list so rapid consecutive
   // toggles before a React re-render do not read stale state.
@@ -42,13 +44,19 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   // Track whether a successful load has completed for the current signed-in user.
   const isLoadedRef = useRef<boolean>(false);
 
+  // Incremented on each effect execution to ignore save results from previous sessions or users.
+  const effectRunIdRef = useRef<number>(0);
+
   useEffect(() => {
     if (isLoading) {
       return;
     }
 
+    effectRunIdRef.current += 1;
+
     if (!user) {
       isLoadedRef.current = false;
+      setSyncError(null);
       const local = loadLocalFavorites();
       favoritesRef.current = local;
       setFavorites(local);
@@ -57,6 +65,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
     let cancelled = false;
     isLoadedRef.current = false;
+    setSyncError(null);
     favoritesRef.current = [];
     setFavorites([]);
 
@@ -72,6 +81,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
         favoritesRef.current = [];
         setFavorites([]);
         isLoadedRef.current = false;
+        setSyncError(`Could not load your favorites. ${result.message}`);
       }
     });
 
@@ -86,17 +96,32 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const updated = toggleFavorite(favoritesRef.current, movie);
-    favoritesRef.current = updated;
-
     if (user) {
-      if (isLoadedRef.current) {
-        void saveUserFavorites(user.uid, updated);
+      if (!isLoadedRef.current) {
+        return;
       }
-    } else {
-      saveLocalFavorites(updated);
+
+      const runId = effectRunIdRef.current;
+      const updated = toggleFavorite(favoritesRef.current, movie);
+      favoritesRef.current = updated;
+      setFavorites(updated);
+
+      void saveUserFavorites(user.uid, updated).then((result) => {
+        if (effectRunIdRef.current !== runId) {
+          return;
+        }
+        if (result.ok) {
+          setSyncError(null);
+        } else {
+          setSyncError(`Could not save your last change. ${result.message}`);
+        }
+      });
+      return;
     }
 
+    const updated = toggleFavorite(favoritesRef.current, movie);
+    favoritesRef.current = updated;
+    saveLocalFavorites(updated);
     setFavorites(updated);
   }
 
@@ -108,6 +133,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     favorites,
     isFavorite,
     toggle,
+    syncError,
   };
 
   return (

@@ -444,3 +444,17 @@
   background-color: #333344;
   color: #ffffff;
 }
+
+
+/* Sync Error Bar */
+.sync-error {
+  background-color: #2c1515;
+  color: #ff6b6b;
+  border: 1px solid #ff4d4d;
+  border-radius: 6px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: center;
+}
